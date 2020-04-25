@@ -11,6 +11,7 @@ class Node
 
 end
 
+
 class Tree
 
     attr_reader :root
@@ -36,50 +37,6 @@ class Tree
 
     end
 
-
-    def find(node, value)
-        if node == nil
-            puts "Not Found!"
-            return
-        elsif node.value == value
-            puts "Found!"
-            return node
-        elsif value > node.value
-            node = node.right
-            find(node, value)
-        elsif value < node.value
-            node = node.left
-            find(node, value)
-        end
-    end
-
-
-    def level_order(array=[self.root], level_counter = 0)
-        return if array.length == 0
-        tmp = array
-        array = []
-        while tmp.length > 0
-            node = tmp[0]
-
-            if node.left != nil
-                array.push(node.left)
-            end
-
-            if node.right != nil
-                array.push(node.right)
-            end
-
-            tmp = tmp.slice(1..-1)
-        end
-
-        # array.each do |node|
-        #     puts node.value
-        # end
-
-        level_counter += 1
-        puts level_counter
-        level_order(array, level_counter)
-    end
 
 
     def insert(node, value)
@@ -147,6 +104,7 @@ class Tree
     end
 
 
+
     def find_min(root)
         current_root = root
         while current_root.left != nil 
@@ -156,6 +114,114 @@ class Tree
         return current_root
     end
 
+
+
+    def find(node, value)
+        if node == nil
+            puts "Not Found!"
+            return
+        elsif node.value == value
+            puts "Found!"
+            return node
+        elsif value > node.value
+            node = node.right
+            find(node, value)
+        elsif value < node.value
+            node = node.left
+            find(node, value)
+        end
+    end
+
+
+    def level_order(proc = nil, array=[self.root])
+    
+        return if array.length == 0
+        tmp = array
+        array = []
+        while tmp.length > 0
+            node = tmp[0]
+
+            if node.left != nil
+                array.push(node.left)
+            end
+            
+            if node.right != nil
+                array.push(node.right)
+            end
+
+            tmp = tmp.slice(1..-1)
+        end
+
+        level_order(proc, array)
+
+        if proc != nil
+            array.each do |value|
+                proc.call(value)
+            end
+        else
+
+            # fix here
+
+            array.each do |node|
+                node.value
+            end
+        end
+    end
+
+
+    def inorder(node, proc=nil)
+        if node
+            inorder(node.left, proc)
+
+            if proc != nil
+                proc.call(node.value)
+            else
+                print "#{node.value} "
+            end
+    
+            inorder(node.right, proc)
+        end
+    end
+
+
+    def preorder(node, proc=nil)
+        if node
+            if proc != nil
+                proc.call(node.value)
+            else
+                print "#{node.value} "
+            end
+
+            preorder(node.left, proc)
+
+            preorder(node.right, proc)
+        end
+    end
+
+
+    def postorder(node, proc=nil)
+        if node
+            postorder(node.left, proc)
+
+            postorder(node.right, proc)
+
+            if proc != nil
+                proc.call(node.value)
+            else
+                print "#{node.value} "
+            end
+        end
+    end
+
+    
+    def depth(node, current_node = self.root)
+        while current_node != node
+            depth(node, node.left)
+            depth(node, node.left)
+        end
+        current_node
+    end
+
 end
 
 
@@ -163,20 +229,48 @@ array = [1, 7, 4, 23, 8, 9, 4, 3, 5, 7, 9, 67, 6345, 324]
 
 new_tree = Tree.new(array)
 
+
 # new_tree.delete(new_tree.root, 67)
+
 
 # new_tree.insert(new_tree.root, 320)
 # new_tree.insert(new_tree.root, 6400)
 
 
-
 # puts new_tree.find(new_tree.root, 4)
 # puts new_tree.find(new_tree.root, 6)
-# puts new_tree.find(new_tree.root, 11)
+# puts new_tree.find(new_tree.root, 64)
 
 
-new_tree.level_order
+# puts new_tree.level_order
 
 
-# new_tree.level_order(block)
-# how to insert block into a function
+# level_order_proc = Proc.new do |val| 
+#     if val.value == 6345
+#         puts "true"
+#     end
+# end
+
+# new_tree.level_order(level_order_proc)
+
+
+
+# inorder_proc = Proc.new do |val|
+#     print "#{val} "
+# end 
+
+# new_tree.inorder(new_tree.root, inorder_proc)
+
+
+# new_tree.inorder(new_tree.root)
+# puts
+
+# new_tree.preorder(new_tree.root)
+# puts
+
+# new_tree.postorder(new_tree.root)
+# puts
+
+
+puts new_tree.find(new_tree.root, 8)
+puts new_tree.depth(new_tree.find(new_tree.root, 8))
