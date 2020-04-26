@@ -1,21 +1,14 @@
 class Node
-
     attr_accessor :value, :right, :left
-
-
     def initialize(value)
         @value = value
         @left = nil
         @right = nil
     end
-
 end
 
-
 class Tree
-
-    attr_reader :root
-
+    attr_accessor :root
     def initialize(array)
         array.sort!.uniq!
         @root = build_tree(array)
@@ -37,7 +30,7 @@ class Tree
     end
 
 
-    def insert(node, value)
+    def insert(node = self.root, value)
         # if new value > current_node call insert with node.right, else call with node.left
         # continue until node.right/left == nil, or until value is the same as new value
         if value > node.value
@@ -115,7 +108,7 @@ class Tree
     end
 
 
-    def find(node, value)
+    def find(value, node = self.root)
         # if you reach the bottom of the tree (==nil) then number is not in tree
         if node == nil
             puts "Not Found!"
@@ -129,106 +122,115 @@ class Tree
         # continue to the right
         elsif value > node.value
             node = node.right
-            find(node, value)
+            find(value, node)
 
         # if the value you are searching for is less than the current node
         # continue down the left of the tree
         elsif value < node.value
             node = node.left
-            find(node, value)
+            find(value, node)
         end
     end
 
 
-    def level_order(proc = nil, array=[self.root])
-        # each time the function runs, the subsiquent level is stored in "array"
-        # so if the function is called with an array of length 0, that means there are no more levels from the last call on.
-        return if array.length == 0
-        tmp = array
-        array = []
+    def level_order(proc = nil, array2 = [self.root], array = [self.root.value])
+        # each time the function runs, the subsiquent level is stored in "array2" while values are pushed to array
+        # if the function is called with an array of length 0, that means there are no more levels from the last call on.
+        return if array2.length == 0
+        tmp = array2
+        array2 = []
 
-        # array is copied to tmp and then used as a queue, pulling up the node and then pushing the respective
+        # array2 is copied to tmp and then used as a queue, pulling up the node and then pushing the respective
         # node's left/right value to the end of the queue. The first value is then sliced off.
         while tmp.length > 0
             node = tmp[0]
 
             if node.left != nil
-                array.push(node.left)
+                array2.push(node.left)
+                array.push(node.left.value)
             end
             
             if node.right != nil
-                array.push(node.right)
+                array2.push(node.right)
+                array.push(node.right.value)
             end
 
             tmp = tmp.slice(1..-1)
         end
 
-        level_order(proc, array)
+        level_order(proc, array2, array)
 
         if proc != nil
-            array.each do |value|
+            array2.each do |value|
                 proc.call(value)
             end
         else
-
-            # fix here
-
-            array.each do |node|
-                node.value
-            end
+            return array
         end
     end
 
 
     # left, root, right
-    def inorder(node, proc=nil)
+    # if no proc, node.value is added to array and then returned
+    # else the function runs a user made proc on each value
+    def inorder(node=self.root, proc=nil, array=[])
         if node
-            inorder(node.left, proc)
+            inorder(node.left, proc, array)
 
             if proc != nil
                 proc.call(node.value)
             else
-                print "#{node.value} "
+                array << node.value
             end
     
-            inorder(node.right, proc)
+            inorder(node.right, proc, array)
         end
+        array
     end
 
     # root, left, right
-    def preorder(node, proc=nil)
+    # if no proc, node.value is added to array and then returned
+    # else the function runs a user made proc on each value
+    def preorder(node=self.root, proc=nil, array=[])
         if node
             if proc != nil
                 proc.call(node.value)
             else
-                print "#{node.value} "
+                array << node.value
             end
 
-            preorder(node.left, proc)
+            preorder(node.left, proc, array)
 
-            preorder(node.right, proc)
+            preorder(node.right, proc, array)
         end
+        array
     end
 
     # left, right, root
-    def postorder(node, proc=nil)
+    # if no proc, node.value is added to array and then returned
+    # else the function runs a user made proc on each value
+    def postorder(node = self.root, proc=nil, array=[])
         if node
-            postorder(node.left, proc)
+            postorder(node.left, proc, array)
 
-            postorder(node.right, proc)
+            postorder(node.right, proc, array)
 
             if proc != nil
                 proc.call(node.value)
             else
-                print "#{node.value} "
+                array << node.value
             end
         end
+        array
     end
 
     # function moves across each level and level_counter increases each time the function is called
     # aka each time the function finishes a level. When the function reachs the searched value it returns the level.
-    def depth(node, current_node = self.root, array = [self.root], level_counter = 1)
-        return if array.length == 0
+    # level_counter starts at 1 to account for the root node
+    def test_depth(node, array = [self.root], level_counter = 1)
+        if array.length == 0
+            return "The tree is #{level_counter - 1} levels deep"
+        end
 
         tmp = array
         array = []
@@ -236,7 +238,7 @@ class Tree
         while tmp.length > 0
             current_node = tmp[0]
             if current_node == node
-                return "Node located on level #{level_counter}"
+                puts "Node located on level #{level_counter}"
             end
 
             if current_node.left != nil
@@ -251,64 +253,76 @@ class Tree
         end
 
         level_counter += 1
-        depth(node, current_node, array, level_counter)
+        depth(node, array, level_counter)
     end
 
+    # takes a node and returns the number of levels below and including the node
+    def depth(current_node = self.root, left_depth = 0, right_depth = 0)
+        return 0 if current_node == nil
+        left_depth = depth(current_node.left)
+        right_depth = depth(current_node.right)
 
+        if left_depth > right_depth
+           return left_depth + 1
+        else
+           return right_depth + 1
+        end
+    end
 
+    def balanced?
+        left_side_depth = depth(self.root.left)
+        right_side_depth = depth(self.root.right)
+
+        if left_side_depth - 1 > right_side_depth
+            return "The tree is unbalanced, the left side is #{left_side_depth - right_side_depth} levels deeper."
+        elsif right_side_depth - 1 > left_side_depth
+            return "The tree is unbalanced, the right side is #{right_side_depth - left_side_depth} levels deeper."
+        else
+            return "The tree is balanced."
+        end
+    end
+
+    def rebalance!
+        array = self.level_order
+        array.sort!.uniq!
+        # puts array
+        self.root = build_tree(array)
+    end
 end
 
 
-array = [1, 7, 4, 23, 8, 9, 4, 3, 5, 7, 9, 67, 6345, 324]
+# Driver Script
+array = Array.new(15) {rand(1..100)}
 
 new_tree = Tree.new(array)
 
+puts new_tree.balanced?
 
-new_tree.delete(new_tree.root, 67)
+print new_tree.level_order
+puts
+print new_tree.preorder
+puts
+print new_tree.postorder
+puts
+print new_tree.inorder
+puts
 
+unbalance_tree = Array.new(15) {rand(1..100)}
 
-# new_tree.insert(new_tree.root, 320)
-# new_tree.insert(new_tree.root, 6400)
+unbalance_tree.each { |random_value| new_tree.insert(random_value) }
 
+puts new_tree.balanced?
 
-# puts new_tree.find(new_tree.root, 4)
-# puts new_tree.find(new_tree.root, 6)
-puts new_tree.find(new_tree.root, 67)
+new_tree.rebalance!
 
+puts new_tree.balanced?
 
-# puts new_tree.level_order
+print new_tree.level_order
+puts
+print new_tree.preorder
+puts
+print new_tree.postorder
+puts
+print new_tree.inorder
+puts
 
-
-# level_order_proc = Proc.new do |val| 
-#     if val.value == 6345
-#         puts "true"
-#     end
-# end
-
-# new_tree.level_order(level_order_proc)
-
-
-
-# inorder_proc = Proc.new do |val|
-#     print "#{val} "
-# end 
-
-# new_tree.inorder(new_tree.root, inorder_proc)
-
-
-# new_tree.inorder(new_tree.root)
-# puts
-
-# new_tree.preorder(new_tree.root)
-# puts
-
-# new_tree.postorder(new_tree.root)
-# puts
-
-
-# puts new_tree.find(new_tree.root, 8)
-
-puts new_tree.depth(new_tree.find(new_tree.root, 4))
-
-
-# fix the functions that are not returning
