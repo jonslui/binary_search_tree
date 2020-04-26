@@ -22,7 +22,6 @@ class Tree
     end
 
 
-
     def build_tree(arr)
         # catch exceptions
         return unless arr[0]
@@ -38,8 +37,9 @@ class Tree
     end
 
 
-
     def insert(node, value)
+        # if new value > current_node call insert with node.right, else call with node.left
+        # continue until node.right/left == nil, or until value is the same as new value
         if value > node.value
             if node.right == nil
                 node.right = Node.new(value)
@@ -56,7 +56,6 @@ class Tree
         end
         return
     end
-
 
 
     def delete(root, value)
@@ -104,28 +103,36 @@ class Tree
     end
 
 
-
     def find_min(root)
-        current_root = root
-        while current_root.left != nil 
-            current_root = current_root.left
+        # continue down left side of tree until current_root.left == nil
+        # in this case current_node is the lowest value
+        current_node = root
+        while current_node.left != nil 
+            current_node = current_node.left
         end
 
-        return current_root
+        return current_node
     end
 
 
-
     def find(node, value)
+        # if you reach the bottom of the tree (==nil) then number is not in tree
         if node == nil
             puts "Not Found!"
             return
+
+        # return node if it is present in table
         elsif node.value == value
-            puts "Found!"
             return node
+
+        # if the value of the current node is less than the value you are searching for,
+        # continue to the right
         elsif value > node.value
             node = node.right
             find(node, value)
+
+        # if the value you are searching for is less than the current node
+        # continue down the left of the tree
         elsif value < node.value
             node = node.left
             find(node, value)
@@ -134,10 +141,14 @@ class Tree
 
 
     def level_order(proc = nil, array=[self.root])
-    
+        # each time the function runs, the subsiquent level is stored in "array"
+        # so if the function is called with an array of length 0, that means there are no more levels from the last call on.
         return if array.length == 0
         tmp = array
         array = []
+
+        # array is copied to tmp and then used as a queue, pulling up the node and then pushing the respective
+        # node's left/right value to the end of the queue. The first value is then sliced off.
         while tmp.length > 0
             node = tmp[0]
 
@@ -169,6 +180,7 @@ class Tree
     end
 
 
+    # left, root, right
     def inorder(node, proc=nil)
         if node
             inorder(node.left, proc)
@@ -183,7 +195,7 @@ class Tree
         end
     end
 
-
+    # root, left, right
     def preorder(node, proc=nil)
         if node
             if proc != nil
@@ -198,7 +210,7 @@ class Tree
         end
     end
 
-
+    # left, right, root
     def postorder(node, proc=nil)
         if node
             postorder(node.left, proc)
@@ -213,14 +225,36 @@ class Tree
         end
     end
 
-    
-    def depth(node, current_node = self.root)
-        while current_node != node
-            depth(node, node.left)
-            depth(node, node.left)
+    # function moves across each level and level_counter increases each time the function is called
+    # aka each time the function finishes a level. When the function reachs the searched value it returns the level.
+    def depth(node, current_node = self.root, array = [self.root], level_counter = 1)
+        return if array.length == 0
+
+        tmp = array
+        array = []
+
+        while tmp.length > 0
+            current_node = tmp[0]
+            if current_node == node
+                return "Node located on level #{level_counter}"
+            end
+
+            if current_node.left != nil
+                array.push(current_node.left)
+            end
+            
+            if current_node.right != nil
+                array.push(current_node.right)
+            end
+
+            tmp = tmp.slice(1..-1)
         end
-        current_node
+
+        level_counter += 1
+        depth(node, current_node, array, level_counter)
     end
+
+
 
 end
 
@@ -230,7 +264,7 @@ array = [1, 7, 4, 23, 8, 9, 4, 3, 5, 7, 9, 67, 6345, 324]
 new_tree = Tree.new(array)
 
 
-# new_tree.delete(new_tree.root, 67)
+new_tree.delete(new_tree.root, 67)
 
 
 # new_tree.insert(new_tree.root, 320)
@@ -239,7 +273,7 @@ new_tree = Tree.new(array)
 
 # puts new_tree.find(new_tree.root, 4)
 # puts new_tree.find(new_tree.root, 6)
-# puts new_tree.find(new_tree.root, 64)
+puts new_tree.find(new_tree.root, 67)
 
 
 # puts new_tree.level_order
@@ -272,5 +306,9 @@ new_tree = Tree.new(array)
 # puts
 
 
-puts new_tree.find(new_tree.root, 8)
-puts new_tree.depth(new_tree.find(new_tree.root, 8))
+# puts new_tree.find(new_tree.root, 8)
+
+puts new_tree.depth(new_tree.find(new_tree.root, 4))
+
+
+# fix the functions that are not returning
